@@ -42,6 +42,7 @@ int main(int argc, char** argv)
             yolov8Pose->detect_yolov8(frame, objects);
             cv::Mat result;
             yolov8Pose->detect_objects(frame, result, objects, SKELETON, KPS_COLORS, LIMB_COLORS);
+            yolov8Pose->draw_fps(result);
             cv::imshow("Detection Result", result);
 
             // 按 'q' 键退出
