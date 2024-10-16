@@ -1,7 +1,7 @@
 #include "yolov8_pose.h"
 
-#define YOLOV8_PARAM "/home/hit/Project/yolov8-pose-human/weights/yolov8-pose-human-opt.param"
-#define YOLOV8_BIN "/home/hit/Project/yolov8-pose-human/weights/yolov8-pose-human-opt.bin"
+#define YOLOV8_PARAM "/home/hit/Project/yolov8-pose-fall-detection/weights/yolov8-pose-human-opt.param"
+#define YOLOV8_BIN "/home/hit/Project/yolov8-pose-fall-detection/weights/yolov8-pose-human-opt.bin"
 
 std::unique_ptr<Yolov8Pose> yolov8Pose(new Yolov8Pose(YOLOV8_PARAM, YOLOV8_BIN, false));
 
