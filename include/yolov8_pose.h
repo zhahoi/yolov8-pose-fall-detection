@@ -3,6 +3,7 @@
 
 #include "layer.h"
 #include "net.h"
+#include "benchmark.h"
 
 #include "opencv2/opencv.hpp"
 
@@ -104,6 +105,7 @@ public:
     int detect_yolov8(const cv::Mat& bgr, std::vector<Object>& objects); 
     void draw_objects(const cv::Mat &image, cv::Mat &res, const std::vector<Object> &objs, const std::vector<std::vector<unsigned int>> &SKELETON, const std::vector<std::vector<unsigned int>> &KPS_COLORS, const std::vector<std::vector<unsigned int>> &LIMB_COLORS); 
     void detect_objects(const cv::Mat &image, cv::Mat &res, const std::vector<Object> &objs, const std::vector<std::vector<unsigned int>> &SKELETON, const std::vector<std::vector<unsigned int>> &KPS_COLORS, const std::vector<std::vector<unsigned int>> &LIMB_COLORS); 
+    int draw_fps(cv::Mat& image);
 
 private:
     float sigmod(const float in);
