@@ -436,7 +436,7 @@ void Yolov8Pose::detect_objects(
         cv::rectangle(
                 res,
                 cv::Rect(x, y, label_size.width, label_size.height + baseLine),
-                {0, 0, 255},
+                {255, 0, 0},
                 -1
         );
 
@@ -459,7 +459,7 @@ void Yolov8Pose::detect_objects(
                 int kps_y = std::round(kps[k * 3 + 1]);
                 float kps_s = kps[k * 3 + 2];
 
-                if (kps_s > 0.0f)
+                if (kps_s > 0.0f)   // 0.0f 
 				{
                     cv::Scalar kps_color = cv::Scalar(KPS_COLORS[k][0], KPS_COLORS[k][1], KPS_COLORS[k][2]);
                     cv::circle(res, {kps_x, kps_y}, 5, kps_color, -1);
@@ -475,58 +475,262 @@ void Yolov8Pose::detect_objects(
             float pos1_s = kps[(ske[0] - 1) * 3 + 2];
             float pos2_s = kps[(ske[1] - 1) * 3 + 2];
 
-            if (pos1_s > 0.0f && pos2_s > 0.0f)
+            if (pos1_s > 0.0f && pos2_s > 0.0f)   // 0.0f
 			{
                 cv::Scalar limb_color = cv::Scalar(LIMB_COLORS[k][0], LIMB_COLORS[k][1], LIMB_COLORS[k][2]);
                 cv::line(res, {pos1_x, pos1_y}, {pos2_x, pos2_y}, limb_color, 2);
             }
+        }
 
-            // fall detection 
-            float pt5_x = kps[5 * 3];
-            float pt5_y = kps[5 * 3 + 1];
-            float pt6_x = kps[6 * 3];
-            float pt6_y = kps[6 * 3 + 1];
-            float center_up_x = (pt5_x + pt6_x) / 2.0f;
-            float center_up_y = (pt5_y + pt6_y) / 2.0f;
-            cv::Point2f center_up = cv::Point2f((int)center_up_x, (int)center_up_y);
- 
-            float pt11_x = kps[11 * 3];
-            float pt11_y = kps[11 * 3 + 1];
-            float pt12_x = kps[12 * 3];
-            float pt12_y = kps[12 * 3 + 1];
-            float center_down_x = (pt11_x + pt12_x) / 2.0f;
-            float center_down_y = (pt11_y + pt12_y) / 2.0f;
-            cv::Point2f center_down = cv::Point2f((int)center_down_x, (int)center_down_y);
- 
-            float right_angle_point_x = center_down_x;
-            float righ_angle_point_y = center_up_y;
-            cv::Point2f right_angl_point = cv::Point2f((int)right_angle_point_x, (int)righ_angle_point_y);
- 
-            float a = abs(right_angle_point_x - center_up_x);
-            float b = abs(center_down_y - righ_angle_point_y);
- 
-            float tan_value = a / b;
-            float Pi = acos(-1);
-            float angle = atan(tan_value) * 180.0f / Pi;
-            std::string angel_label = "angle: " + std::to_string(angle);
-            cv::putText(res, angel_label, cv::Point2f(obj.rect.x, obj.rect.y - 10), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 255), 2);
- 
-            if (angle > 60.0f || center_down_y <= center_up_y || (double) obj.rect.width / obj.rect.height > 5.0f / 3.0f) // 宽高比小于0.6为站立，大于5/3为跌倒
-            {
-                std::string fall_down_label = "person fall down!!!!";
-                cv::putText(res, fall_down_label , cv::Point2f(obj.rect.x, obj.rect.y - 5), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 255), 2);
- 
-                printf("angel:%f width / height:%f\n",angle, (double)obj.rect.width / obj.rect.height );
-            }
- 
-            cv::line(res, center_up, center_down,
-                     cv::Scalar(0,0,255), 2, 8);
-            cv::line(res, center_up, right_angl_point,
-                     cv::Scalar(0,0,255), 2, 8);
-            cv::line(res, right_angl_point, center_down,
-                     cv::Scalar(0,0,255), 2, 8);
+		// 进行摔倒判断
+        bool is_fall = fall_estimate(kps);
+
+        char text_[32];
+        if (is_fall)
+        {
+            sprintf(text_, "STATUS:FALL");
+        }
+        else
+        {
+            sprintf(text_, "STATUS:NORMAL");
+        }
+
+        int baseLine_ = 0;
+        cv::Size label_size_ = cv::getTextSize(
+                text_,
+                cv::FONT_HERSHEY_SIMPLEX,
+                0.4,
+                1,
+                &baseLine_
+        );
+
+        int x_ = (int) obj.rect.x;
+        int y_ = (int) obj.rect.y - 15;
+
+        if (y_ > res.rows)
+            y_ = res.rows;
+
+        if (is_fall)
+        {
+            cv::rectangle(
+                res,
+                cv::Rect(x_, y_, label_size_.width, label_size_.height + baseLine_),
+                {0, 0, 255},
+                -1
+            );
+        }
+        else
+        {
+            cv::rectangle(
+                res,
+                cv::Rect(x_, y_, label_size_.width, label_size_.height + baseLine_),
+                {0, 255, 0},
+                -1
+            );
+        }
+
+        cv::putText(
+                res,
+                text_,
+                cv::Point(x_, y_ + label_size_.height),
+                cv::FONT_HERSHEY_SIMPLEX,
+                0.4,
+                {0, 0, 0},
+                1
+        );
+    }
+}
+
+
+// 通过检测到的关键点，根据设定的一些规则进行是否摔倒判定
+bool Yolov8Pose::fall_estimate(const std::vector<float>& kps)
+{
+	// 设置一个判断是否为摔倒的变量
+	bool is_fall = false;
+
+	// 1. 先获取哪些用于判断的点坐标
+	cv::Point L_shoulder = cv::Point((int)kps[5 * 3], (int)kps[5 * 3 + 1]);  // 左肩
+	float L_shoulder_confi = kps[5 * 3 + 2];  
+	cv::Point R_shoulder = cv::Point((int)kps[6 * 3], (int)kps[6 * 3 + 1]);  // 右肩
+	float R_shoulder_confi = kps[6 * 3 + 2];
+	cv::Point C_shoulder = cv::Point((int)(L_shoulder.x + R_shoulder.x) / 2, (int)(L_shoulder.y + R_shoulder.y) / 2);  // 肩部中点
+
+	cv::Point L_hip = cv::Point((int)kps[11 * 3], (int)kps[11 * 3 + 1]);  // 左髋
+	float L_hip_confi = kps[11 * 3 + 2]; 
+	cv::Point R_hip = cv::Point((int)kps[12 * 3], (int)kps[12 * 3 + 1]);  // 右髋
+	float R_hip_confi = kps[12 * 3 + 2]; 
+	cv::Point C_hip = cv::Point((int)(L_hip.x + R_hip.x) / 2, (int)(L_hip.y + R_hip.y) / 2);  // 髋部中点
+
+	cv::Point L_knee = cv::Point((int)kps[13 * 3], (int)kps[13 * 3 + 1]);  // 左膝
+	float L_knee_confi = kps[13 * 3 + 2]; 
+	cv::Point R_knee = cv::Point((int)kps[14 * 3], (int)kps[14 * 3 + 1]);  // 右膝
+	float R_knee_confi = kps[14 * 3 + 2]; 
+	cv::Point C_knee = cv::Point((int)(L_knee.x + R_knee.x) / 2, (int)(L_knee.y + R_knee.y) / 2);  // 膝部中点
+
+	cv::Point L_ankle = cv::Point((int)kps[15 * 3], (int)kps[15 * 3 + 1]);  // 左踝
+	float L_ankle_confi = kps[15 * 3 + 2]; 
+	cv::Point R_ankle = cv::Point((int)kps[16 * 3], (int)kps[16 * 3 + 1]);  // 右踝
+	float R_ankle_confi = kps[16 * 3 + 2];
+	cv::Point C_ankle = cv::Point((int)(L_ankle.x + R_ankle.x) / 2, (int)(L_ankle.y + R_ankle.y) / 2);  // 计算脚踝中点
+
+	// 2. 第一个判定条件： 若肩的纵坐标最小值min(L_shoulder.y, R_shoulder.y)不低于脚踝的中心点的纵坐标C_ankle.y
+	// 且p_shoulders、p_ankle关键点置信度大于预设的阈值，则疑似摔倒。
+	if (L_shoulder_confi > 0.0f && R_shoulder_confi > 0.0f && L_ankle_confi > 0.0f && R_ankle_confi > 0.0f)
+	{
+		int shoulder_y_min = std::min(L_shoulder.y, R_shoulder.y);
+		if (shoulder_y_min >= C_ankle.y)
+		{
+			is_fall = true;
+			return is_fall;
+		}
+	}
+
+	// 3. 第二个判断条件：若肩的纵坐标最大值max(L_shoulder.y, R_shoulder.y)大于膝盖纵坐标的最小值min(L_knee.y, R_knee.y)，
+	// 且p_shoulders、p_knees关键点置信度大于预设的阈值，则疑似摔倒。
+	if (L_shoulder_confi > 0.0f && R_shoulder_confi > 0.0f && L_knee_confi > 0.0f && R_knee_confi > 0.0f)
+	{
+		int shoulder_y_max = std::max(L_shoulder.y, R_shoulder.y);
+		int knee_y_min = std::min(L_knee.y, R_knee.y);
+		if (shoulder_y_max > knee_y_min)
+		{
+			is_fall = true;
+			return is_fall;
+		}
+	}
+
+	// 4, 第三个判断条件：计算关键点最小外接矩形的宽高比。p0～p16在x方向的距离是xmax-xmin，在方向的距离是ymax-ymin，
+	// 若(xmax-xmin) / (ymax-ymin)不大于指定的比例阈值，则判定为未摔倒，不再进行后续判定。
+	const int num_point = 17;  // 17个关键点
+
+	// 初始化xmin, ymin为最大值，xmax, ymax为最小值
+	int xmin = std::numeric_limits<int>::max();
+	int ymin = std::numeric_limits<int>::max();
+	int xmax = std::numeric_limits<int>::min();
+	int ymax = std::numeric_limits<int>::min();
+	
+	for (int k = 0; k < num_point + 2; k++)
+	{
+		if (k < num_point)
+		{
+			int kps_x = std::round(kps[k * 3]);  // 关键点x
+			int kps_y = std::round(kps[k * 3 + 1]);  // 关键点y
+			float kps_s = kps[k * 3 + 2];  // 可见性
+
+			if (kps_s > 0.0f)
+			{
+				// 更新xmin, xmax, ymin, ymax
+				xmin = std::min(xmin, kps_x);
+				xmax = std::max(xmax, kps_x);
+				ymin = std::min(ymin, kps_y);
+				ymax = std::max(ymax, kps_y);
+			}
+		}
+	}
+
+	// 检查是否存在有效的宽度和高度
+	if (xmax > xmin && ymax > ymin)
+	{
+		float aspect_ratio = static_cast<float>(xmax - xmin) / (ymax - ymin);
+		
+		// 如果宽高比大于指定阈值，则判定为摔倒
+		if (aspect_ratio > 0.90f)
+		{
+			is_fall = true;
+			return is_fall;
+		}
+	}
+
+	// 5. 第四个判断条件：通过两膝与髋部中心点的连线与地面的夹角判断。首先假定有两点p1＝(x1 ,y1 )，p2＝(x2 ,y2 )，那么两点连接线与地面的角度计算公式为：
+	// 												θ = arctan((y2-y1) / (x2-x1)) * 180 / pi
+	// 此处左膝与髋部的两点是(C_hip, L_knee)，与地面夹角表示为θ1；右膝与髋部的两点 是(C_hip, R_knee)，与地面夹角表示为θ2，
+	// 若min(θ1 ,θ2 )＜th1 或 max(θ1 ,θ2 )＜th2，且p_knees、 p_hips关键点置信度大于预设的阈值，则疑似摔倒
+    if (L_knee_confi > 0.0f && R_knee_confi > 0.0f && L_hip_confi > 0.0f && R_hip_confi > 0.0f)
+    {
+        // 左膝与髋部中心的角度
+        float theta1 = std::atan2(L_knee.y - C_hip.y, L_knee.x - C_hip.x) * 180.0f / CV_PI;
+        // 右膝与髋部中心的角度
+        float theta2 = std::atan2(R_knee.y - C_hip.y, R_knee.x - C_hip.x) * 180.0f / CV_PI;
+
+        float min_theta = std::min(std::abs(theta1), std::abs(theta2));
+        float max_theta = std::max(std::abs(theta1), std::abs(theta2));
+
+        /*
+        根据人体运动规律，阈值th1 和 th2 应设置为代表正常和摔倒之间的界限角度。
+        通常情况下，如果人体处于站立或行走状态，膝盖与髋部的连线与地面之间的角度应接近垂直或有一定的倾斜，而当摔倒时，这个角度通常会明显减小。
+        th1: 用于判断两膝与髋部的连线与地面的最小角度。可以设定为 20度。如果min(θ1 ,θ2 )＜th1,即两膝与髋部的连线明显接近平行于地面，则有可能表示摔倒的姿态。
+        th2: 用于判断两膝与髋部的连线与地面的最大角度。可以设定为 45度。如果max(θ1 ,θ2 )＜th2,即两膝与髋部的连线即使有倾斜但依然小于正常站立的角度范围，也可能表明摔倒的风险。
+        */
+
+        // 设定阈值 th1 和 th2，用于判定是否摔倒
+        float th1 = 30.0f;  // 假设的最小角度阈值  // 20, 30 ,25
+        float th2 = 70.0f;  // 假设的最大角度阈值  // 35, 40, 45, 50, 60
+
+        // std::cout << "min_theta: " << min_theta  << ", " << "max_theta: " << max_theta << std::endl;
+
+        if ((min_theta) < th1 && (max_theta < th2))
+        {
+			is_fall = true;
+			return is_fall;
         }
     }
+
+	// 第五个判断条件：通过肩、髋部、膝盖夹角，髋部、膝盖、脚踝夹角判断。
+	// 首先假定有四点p1＝(x1 ,y1 )，p2＝(x2 ,y2 )，p3＝(x3 ,y3 )，p4＝(x4 ,y4 )，其中，p1 p2组 成的向量为v1＝(x2 -x1 ,y2 -y1 )，
+	// p3 p4组成的向量为v2＝(x4 -x3 ,y4 -y3 )。v1 v2的夹角计算公式为：
+	// θ = arctan((v1 * v2) / (sqrt(v1 * v1) * sqrt(v2 * v2))) * 180 / pi
+	// 此处， v1＝(c_shoulder.x - c_hips.x, c_shoulders.y - c_hips.y) 
+	//	v2＝(c_knees.x -c_hips.x, c_knees .y - c_hips.y) 
+	//	v3＝(c_hips.x - c_knees.x, c_hips.y - c_knees.y) 
+	// 	v4＝(c_foot.x - c_knees.x, c_foot.y - c_knees.y) 
+	// v1 v2两个向量的夹角表示为θ3，v3 v4两个向量的夹角表示为θ4。若θ3＞th3或θ4＜ th4，且p_shoulders、p_knees、p_hips、p_foot关键点置信度大于预设的阈值，则疑似摔倒。
+	// 第五个判断条件：通过肩、髋部、膝盖夹角，髋部、膝盖、脚踝夹角判断。
+	// 如果肩、髋、膝和脚踝关键点的置信度都大于阈值，我们继续进行角度的计算。
+	if (L_shoulder_confi > 0.0f && R_shoulder_confi > 0.0f && L_hip_confi > 0.0f && R_hip_confi > 0.0f && L_knee_confi > 0.0f && R_knee_confi > 0.0f &&
+		L_ankle_confi > 0.0f && R_ankle_confi > 0.0f)
+	{
+		// 计算向量 v1 和 v2
+		cv::Point2f v1(C_shoulder.x - C_hip.x, C_shoulder.y - C_hip.y);
+		cv::Point2f v2(C_knee.x - C_hip.x, C_knee.y - C_hip.y);
+
+		// 计算向量 v3 和 v4
+		cv::Point2f v3(C_hip.x - C_knee.x, C_hip.y - C_knee.y);
+		cv::Point2f v4(C_ankle.x - C_knee.x, C_ankle.y - C_knee.y);
+
+		// 计算向量 v1 和 v2 的夹角 θ3
+		float dot_product1 = v1.x * v2.x + v1.y * v2.y;
+		float magnitude1 = std::sqrt(v1.x * v1.x + v1.y * v1.y) * std::sqrt(v2.x * v2.x + v2.y * v2.y);
+		float theta3 = std::acos(dot_product1 / magnitude1) * 180.0f / CV_PI;
+
+		// 计算向量 v3 和 v4 的夹角 θ4
+		float dot_product2 = v3.x * v4.x + v3.y * v4.y;
+		float magnitude2 = std::sqrt(v3.x * v3.x + v3.y * v3.y) * std::sqrt(v4.x * v4.x + v4.y * v4.y);
+		float theta4 = std::acos(dot_product2 / magnitude2) * 180.0f / CV_PI;
+
+        /*
+        定义: 𝜃3是肩、髋、膝三点形成的向量夹角。通常情况下，站立时肩、髋和膝盖的夹角应该接近 180度（几乎成一条直线）。
+        摔倒判断: 当人摔倒或发生意外时，这个角度可能会急剧减少。一个合理的阈值可以设定为 120度 或 130度。
+        定义: 𝜃4是髋、膝、脚踝三点形成的向量夹角。站立或正常行走时，这个角度通常在 160度 到 180度 之间（接近直线）。在弯曲或下蹲时，这个角度可能会降低。
+        摔倒判断: 如果此角度降低到一个较小的值（例如人体接近折叠或蜷缩的状态），可以判断为摔倒。一个合理的阈值可以设定为 60度 或 70度。
+        */
+
+        /*
+        th3（肩、髋、膝夹角）被设定为70.0f。这个值是基于假设站立时肩、髋和膝盖的夹角应该接近180度（几乎成一条直线），但在摔倒时这个角度可能会急剧减少。
+        th4（髋、膝、脚踝夹角）被设定为60.0f。这个值是基于假设站立或正常行走时，这个角度通常在160度到180度之间，而在摔倒或身体接近折叠状态时，这个角度可能会显著降低。
+        */
+
+		// 设定角度阈值 th3 和 th4
+		float th3 = 70.0f;  // 假设的阈值，肩、髋和膝的角度  // 120.0f, 130.0f 
+		float th4 = 30.0f;   // 假设的阈值，髋、膝和脚踝的角度  // 60.0f, 70.0f 
+
+		// 判断是否符合摔倒条件
+		if ((theta3 < th3) && (theta4 < th4))
+		{
+            // std::cout << "theta3: " << theta3  << ", " << "theta4: " << theta4 << std::endl;
+			is_fall = true;
+		}
+		
+        return is_fall;
+	}
 }
 
 
