@@ -33,33 +33,33 @@
 
 **测试视频**
 
-[测试视频1](https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output0.gif)
+https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output0.gif
 
-[测试视频2](https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output1.gif)
+https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output1.gif
 
-[测试视频3](https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output2.gif)
+https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output2.gif
 
-[测试视频4](https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output3.gif)
+https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output3.gif
 
-[测试视频5](https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output4.gif)
+https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output4.gif
 
-[测试视频6](https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output5.gif)
+https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output5.gif
 
 
 
 **测试图片**
 
-[测试图片1](https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output.jpg)
+https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output.jpg
 
-[测试图片2](https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output0.jpg)
+https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output0.jpg
 
-[测试图片3](https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output1.jpg)
+https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output1.jpg
 
-[测试图片4](https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output5.jpg)
+https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output5.jpg
 
-[测试图片5](https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output6.jpg)
+https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output6.jpg
 
-[测试图片6](https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output7.jpg)
+https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output7.jpg
 
 
 
