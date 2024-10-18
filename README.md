@@ -31,5 +31,42 @@
 
 以下是一些图片和视频的展示结果，有一些结果推理不正确，理论上是因为yolov8-pose识别人体关键点出错（为了减少训练时间，我只用了一万多张图片进行训练，如果使用所有的关键点检测数据进行训练的话，相信结果一定好很多）。
 
-**视频**
+**测试视频**
 
+[测试视频1](https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output0.gif)
+
+[测试视频2](https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output1.gif)
+
+[测试视频3](https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output2.gif)
+
+[测试视频4](https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output3.gif)
+
+[测试视频5](https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output4.gif)
+
+[测试视频6](https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output5.gif)
+
+
+
+**测试图片**
+
+[测试图片1](https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output.jpg)
+
+[测试图片2](https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output0.jpg)
+
+[测试图片3](https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output1.jpg)
+
+[测试图片4](https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output5.jpg)
+
+[测试图片5](https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output6.jpg)
+
+[测试图片6](https://github.com/zhahoi/yolov8-pose-fall-detection/blob/main/outputs/output7.jpg)
+
+
+
+## 合
+
+花了几天时间完成了这个仓库的代码，有非常多的不足。尤其是摔倒预测那部分，有些阈值参数还是没设置好，存在一定程度的误报。如果看到这个仓库的你想自己使用的话，需要尽量调试一下这些参数，获得更好的检测效果。
+
+后续有时间希望增加跟踪功能。
+
+创作不易，如果觉得这个仓库还可以的话，麻烦给一个star，这就是对我最大的鼓励。
