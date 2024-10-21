@@ -410,56 +410,10 @@ void Yolov8Pose::detect_objects_tracker(
 {
     res = image.clone();
     const int num_point = 17;
-    for (auto &obj: objs) {
-		/*
-        cv::rectangle(
-                res,
-                obj.rect,
-                {0, 0, 255},
-                2
-        );
-
-        char text[256];
-        sprintf(
-                text,
-                "person %.1f%%",
-                obj.prob * 100
-        );
-
-        int baseLine = 0;
-        cv::Size label_size = cv::getTextSize(
-                text,
-                cv::FONT_HERSHEY_SIMPLEX,
-                0.4,
-                1,
-                &baseLine
-        );
-
-        int x = (int) obj.rect.x;
-        int y = (int) obj.rect.y + 1;
-
-        if (y > res.rows)
-            y = res.rows;
-
-        cv::rectangle(
-                res,
-                cv::Rect(x, y, label_size.width, label_size.height + baseLine),
-                {255, 0, 0},
-                -1
-        );
-
-        cv::putText(
-                res,
-                text,
-                cv::Point(x, y + label_size.height),
-                cv::FONT_HERSHEY_SIMPLEX,
-                0.4,
-                {255, 255, 255},
-                1
-        );
-		*/
-
+    for (auto &obj: objs) 
+	{
         auto &kps = obj.kps;
+		
         for (int k = 0; k < num_point + 2; k++)
 		{
             if (k < num_point)
