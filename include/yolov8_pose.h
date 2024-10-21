@@ -3,6 +3,9 @@
 
 #include "layer.h"
 #include "net.h"
+#include "benchmark.h"
+
+#include "STrack.h"
 
 #include "opencv2/opencv.hpp"
 
@@ -108,15 +111,17 @@ public:
     int detect_yolov8(const cv::Mat& bgr, std::vector<Object>& objects); 
     void draw_objects(const cv::Mat &image, cv::Mat &res, const std::vector<Object> &objs, const std::vector<std::vector<unsigned int>> &SKELETON, const std::vector<std::vector<unsigned int>> &KPS_COLORS, const std::vector<std::vector<unsigned int>> &LIMB_COLORS); 
     void detect_objects(const cv::Mat &image, cv::Mat &res, const std::vector<Object> &objs, const std::vector<std::vector<unsigned int>> &SKELETON, const std::vector<std::vector<unsigned int>> &KPS_COLORS, const std::vector<std::vector<unsigned int>> &LIMB_COLORS); 
+    void detect_objects_tracker(const cv::Mat &image, cv::Mat &res, const std::vector<Object> &objs, const std::vector<STrack>& output_stracks, const std::vector<std::vector<unsigned int>> &SKELETON, const std::vector<std::vector<unsigned int>> &KPS_COLORS, const std::vector<std::vector<unsigned int>> &LIMB_COLORS); 
+    int draw_fps(cv::Mat& image);
+
 
 private:
     float sigmod(const float in);
     float softmax(const float* src, float* dst, int length);
     void generate_proposals(int stride, const ncnn::Mat& feat_blob, const float prob_threshold, std::vector<Object>& objects);
     float clamp(float val, float min = 0.f, float max = 1280.f);
-    void non_max_suppression(std::vector<Object>& proposals, std::vector<Object>& results, int orin_h, int orin_w, float dh = 0, float dw = 0, float ratio_h = 1.0f, float ratio_w = 1.0f, float conf_thres = 0.25f, float iou_thres = 0.65f);
-    bool fall_estimate(const std::vector<float>& kps);  // 摔倒检测
+    void non_max_suppression(std::vector<Object>& proposals, std::vector<Object>& results, int orin_h, int orin_w, float dh = 0, float dw = 0, float ratio_h = 1.0f, float ratio_w = 1.0f, float conf_thres = 0.65f, float iou_thres = 0.35f);
+    bool fall_estimate(const std::vector<float>& kps);
+
 };
-
-
 #endif // YOLOV8_POSE_H

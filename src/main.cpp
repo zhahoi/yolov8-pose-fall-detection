@@ -1,5 +1,18 @@
 #include "yolov8_pose.h"
 
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/opencv.hpp>
+
+#include <float.h>
+#include <stdio.h>
+#include <vector>
+#include <chrono>
+#include "BYTETracker.h"
+
+// #define Tracker bytetracker
+
 #define YOLOV8_PARAM "/home/hit/Project/yolov8-pose-human/weights/yolov8-pose-human-opt.param"
 #define YOLOV8_BIN "/home/hit/Project/yolov8-pose-human/weights/yolov8-pose-human-opt.bin"
 #define SAVE_PATH "/home/hit/Project/yolov8-pose-human/outputs"
@@ -44,6 +57,11 @@ int main(int argc, char** argv)
         int frame_height = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_HEIGHT));
         int fps = static_cast<int>(cap.get(cv::CAP_PROP_FPS));
 
+#ifdef Tracker
+        // ByteTracker
+        BYTETracker tracker(fps, 50);  // 30 
+#endif 
+
         // 定义视频编码器和输出文件名
         cv::VideoWriter outputVideo(SAVE_PATH + std::string("/output.mp4"), cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), fps, cv::Size(frame_width, frame_height));
 
@@ -51,8 +69,20 @@ int main(int argc, char** argv)
         while (cap.read(frame)) {
             std::vector<Object> objects;
             yolov8Pose->detect_yolov8(frame, objects);
+
+#ifdef Tracker
+            // tracker
+            std::vector<STrack> output_stracks = tracker.update(objects);
+#endif
+
+            // visualizer
             cv::Mat result;
+
+#ifdef Tracker
+            yolov8Pose->detect_objects_tracker(frame, result, objects, output_stracks, SKELETON, KPS_COLORS, LIMB_COLORS);
+#else
             yolov8Pose->detect_objects(frame, result, objects, SKELETON, KPS_COLORS, LIMB_COLORS);
+#endif
             yolov8Pose->draw_fps(result);
 
             // 写入视频

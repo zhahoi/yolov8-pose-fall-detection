@@ -1,6 +1,8 @@
 # yolov8-pose-fall-detection
 使用yolov8-pose进行人体关键点检测，通过计算人体各关键点关系进行人体摔倒检测（ncnn框架实现）
 
+[2024.10.21]更新：增加ByteTrakcer目标跟踪功能。
+
 
 
 ## 起
@@ -70,3 +72,13 @@
 后续有时间希望增加跟踪功能。
 
 创作不易，如果觉得这个仓库还可以的话，麻烦给一个star，这就是对我最大的鼓励。
+
+
+
+[2024.10.21]更新：增加了ByteTracker目标更新代码，可以实现多目标跟踪。
+
+
+
+## Reference
+
+-[ByteTracker](https://github.com/ifzhang/ByteTrack/tree/3434c5e8bc6a5ae8ad530528ba8d9a431967f237/deploy/ncnn/cpp)

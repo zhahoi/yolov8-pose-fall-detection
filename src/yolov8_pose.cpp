@@ -392,6 +392,226 @@ void Yolov8Pose::draw_objects(
 }
 
 
+inline cv::Scalar random_get_color(int idx)
+{
+	idx += 3;
+	return cv::Scalar(37 * idx % 255, 17 * idx % 255, 29 * idx % 255);
+}
+
+void Yolov8Pose::detect_objects_tracker(
+        const cv::Mat &image,
+        cv::Mat &res,
+        const std::vector<Object> &objs,
+		const std::vector<STrack>& output_stracks,
+        const std::vector<std::vector<unsigned int>> &SKELETON,
+        const std::vector<std::vector<unsigned int>> &KPS_COLORS,
+        const std::vector<std::vector<unsigned int>> &LIMB_COLORS
+) 
+{
+    res = image.clone();
+    const int num_point = 17;
+    for (auto &obj: objs) {
+		/*
+        cv::rectangle(
+                res,
+                obj.rect,
+                {0, 0, 255},
+                2
+        );
+
+        char text[256];
+        sprintf(
+                text,
+                "person %.1f%%",
+                obj.prob * 100
+        );
+
+        int baseLine = 0;
+        cv::Size label_size = cv::getTextSize(
+                text,
+                cv::FONT_HERSHEY_SIMPLEX,
+                0.4,
+                1,
+                &baseLine
+        );
+
+        int x = (int) obj.rect.x;
+        int y = (int) obj.rect.y + 1;
+
+        if (y > res.rows)
+            y = res.rows;
+
+        cv::rectangle(
+                res,
+                cv::Rect(x, y, label_size.width, label_size.height + baseLine),
+                {255, 0, 0},
+                -1
+        );
+
+        cv::putText(
+                res,
+                text,
+                cv::Point(x, y + label_size.height),
+                cv::FONT_HERSHEY_SIMPLEX,
+                0.4,
+                {255, 255, 255},
+                1
+        );
+		*/
+
+        auto &kps = obj.kps;
+        for (int k = 0; k < num_point + 2; k++)
+		{
+            if (k < num_point)
+			{
+                int kps_x = std::round(kps[k * 3]);
+                int kps_y = std::round(kps[k * 3 + 1]);
+                float kps_s = kps[k * 3 + 2];
+
+                if (kps_s > 0.0f)   // 0.0f 
+				{
+                    cv::Scalar kps_color = cv::Scalar(KPS_COLORS[k][0], KPS_COLORS[k][1], KPS_COLORS[k][2]);
+                    cv::circle(res, {kps_x, kps_y}, 5, kps_color, -1);
+                }
+            }
+            auto &ske = SKELETON[k];
+            int pos1_x = std::round(kps[(ske[0] - 1) * 3]);
+            int pos1_y = std::round(kps[(ske[0] - 1) * 3 + 1]);
+
+            int pos2_x = std::round(kps[(ske[1] - 1) * 3]);
+            int pos2_y = std::round(kps[(ske[1] - 1) * 3 + 1]);
+
+            float pos1_s = kps[(ske[0] - 1) * 3 + 2];
+            float pos2_s = kps[(ske[1] - 1) * 3 + 2];
+
+            if (pos1_s > 0.0f && pos2_s > 0.0f)   // 0.0f
+			{
+                cv::Scalar limb_color = cv::Scalar(LIMB_COLORS[k][0], LIMB_COLORS[k][1], LIMB_COLORS[k][2]);
+                cv::line(res, {pos1_x, pos1_y}, {pos2_x, pos2_y}, limb_color, 2);
+            }
+        }
+
+        bool is_fall = fall_estimate(kps);
+
+        char text_[32];
+        if (is_fall)
+        {
+            sprintf(text_, "STATUS:FALL");
+        }
+        else
+        {
+            sprintf(text_, "STATUS:NORMAL");
+        }
+
+        int baseLine_ = 0;
+        cv::Size label_size_ = cv::getTextSize(
+                text_,
+                cv::FONT_HERSHEY_SIMPLEX,
+                0.4,
+                1,
+                &baseLine_
+        );
+
+        int x_ = (int) obj.rect.x;
+        int y_ = (int) obj.rect.y - 15;
+
+        if (y_ > res.rows)
+            y_ = res.rows;
+
+        if (is_fall)
+        {
+            cv::rectangle(
+                res,
+                cv::Rect(x_, y_, label_size_.width, label_size_.height + baseLine_),
+                {0, 0, 255},
+                -1
+            );
+        }
+        else
+        {
+            cv::rectangle(
+                res,
+                cv::Rect(x_, y_, label_size_.width, label_size_.height + baseLine_),
+                {0, 255, 0},
+                -1
+            );
+        }
+
+        cv::putText(
+                res,
+                text_,
+                cv::Point(x_, y_ + label_size_.height),
+                cv::FONT_HERSHEY_SIMPLEX,
+                0.4,
+                {0, 0, 0},
+                1
+        );
+    }
+
+	// tracker
+	for (int i = 0; i < output_stracks.size(); i++)
+	{
+		std::vector<float> tlwh = output_stracks[i].tlwh;
+		// bool vertical = tlwh[2] / tlwh[3] > 1.6;
+		// if (tlwh[2] * tlwh[3] > 20 && !vertical)
+		if (tlwh[2] * tlwh[3] > 20)
+		{
+			cv::Scalar s = random_get_color(output_stracks[i].track_id);
+
+			char text[256];
+			sprintf(
+					text,
+					"ID: %d",
+					output_stracks[i].track_id
+			);
+
+			int baseLine = 0;
+			cv::Size label_size = cv::getTextSize(
+					text,
+					cv::FONT_HERSHEY_SIMPLEX,
+					0.4,
+					1,
+					&baseLine
+			);
+
+			int x = (int) tlwh[0];
+			int y = (int) tlwh[1] + 1;
+
+			if (y > res.rows)
+				y = res.rows;
+
+
+			// 绘制矩形框
+			cv::rectangle(
+				res,
+				cv::Rect(x, y, label_size.width, label_size.height + baseLine),
+				s,
+				cv::FILLED // 填充矩形框，使其作为背景
+			);
+
+			// 绘制文本边框
+			cv::rectangle(
+				res,
+				cv::Rect(tlwh[0], tlwh[1], tlwh[2], tlwh[3] + baseLine),
+				s,
+				2
+			);
+
+			// 绘制文本
+			cv::putText(
+				res,
+				text,
+				cv::Point(x, y + label_size.height),
+				cv::FONT_HERSHEY_SIMPLEX,
+				0.4,
+				{255, 255, 255},
+				1
+			);
+		}
+	}
+}
+
+
 void Yolov8Pose::detect_objects(
         const cv::Mat &image,
         cv::Mat &res,
@@ -482,7 +702,6 @@ void Yolov8Pose::detect_objects(
             }
         }
 
-		// 进行摔倒判断
         bool is_fall = fall_estimate(kps);
 
         char text_[32];

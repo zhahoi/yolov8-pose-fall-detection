@@ -23,6 +23,9 @@ endif()
 set(OpenCV_DIR "/home/hit/Softwares/opencv-3.4.10/build")
 find_package(OpenCV REQUIRED)
 
+set(Eigen_DIR "/home/hit/Softwares/eigen-3.3.9")
+find_package(OpenCV REQUIRED)
+
 set(ncnn_DIR "/home/hit/Softwares/ncnn/build/install/lib/cmake/ncnn")
 find_package(ncnn REQUIRED)
 if(NOT TARGET ncnn)
@@ -39,10 +42,16 @@ include_directories(
     ${project_include}
     ${OpenCV_INCLUDE_DIRS}
     ${CMAKE_CURRENT_BINARY_DIR}
+    ${Eigen_DIR}
 )
 
 add_executable(
     yolov8-pose
+    src/BYTETracker.cpp
+    src/kalmanFilter.cpp
+    src/lapjv.cpp
+    src/utils.cpp
+    src/STrack.cpp
     src/yolov8_pose.cpp
     src/main.cpp
 )
